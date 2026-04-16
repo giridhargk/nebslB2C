@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nebsl-b2c-api"
+version = "1.0.0"
+description = "The official Python client for the NEBSL B2C REST API"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.7"
+authors = [
+    {name = "code161263", email = "code@northeastltd.com"},
+]
+dependencies = [
+    "python-engineio==4.9.0",
+    "python-socketio==5.0.1",
+    "requests==2.31.0",
+    "websockets==12.0",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/giridhargk/nebslB2C"
+
+[tool.setuptools.packages.find]
+include = ["pycloudrestapi*"]

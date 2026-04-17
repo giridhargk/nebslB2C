@@ -22,6 +22,19 @@ Think of it as a remote control for your trading account. Instead of logging int
 - **Portfolio** — View your open positions, convert positions from intraday to delivery (or vice versa), and check your demat holdings.
 - **Live Data** — Subscribe to touchline (LTP) and best-five (market depth) data via WebSocket.
 
+
+---
+
+## Official Documentation ( Recommended )
+
+Full API reference with all endpoints, request schemas, and response structures:
+
+🔗 [https://b2c-api-docs.northeastltd.in/docs/B2CAPI/nebsl-b2c-api-docs.html](https://b2c-api-docs.northeastltd.in/docs/B2CAPI/nebsl-b2c-api-docs.html)
+
+---
+
+
+
 ---
 
 ## Installation
@@ -582,15 +595,6 @@ Get scrip tokens from the scrip master files:
 Replace the path with `/scripfiles/v2/<EXCHANGE>.json`, e.g.:
 `https://odinscripmaster.s3.ap-south-1.amazonaws.com/scripfiles/v2/NSE_FO.json`
 
----
-
-## Official Documentation
-
-Full API reference with all endpoints, request schemas, and response structures:
-
-🔗 [https://b2c-api-docs.northeastltd.in/docs/B2CAPI/nebsl-b2c-api-docs.html](https://b2c-api-docs.northeastltd.in/docs/B2CAPI/nebsl-b2c-api-docs.html)
-
----
 
 ## Complete API Reference
 

@@ -58,6 +58,7 @@ class IBTConnect:
         self.api_key = params.get("api_key")
         self.x_api_key = params.get("x-api-key")
         self.debug = params.get("debug") or False
+        self.second_auth = params.get("second_auth")
         # self.proxies = proxies if proxies else {}
         # Create requests session by default
         # Same session to be used by pool connections

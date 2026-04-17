@@ -18,7 +18,7 @@ class IBTConnect:
     timeout = 10000
     source = "WEBAPI"
   #  second_auth_type = "TOTP"
-    second_auth="BVCPA7213B"
+    second_auth="BXXXXXXXXXXXB"
     login_type = "PASSWORD"
     logon_response = ""
     is_connected = False

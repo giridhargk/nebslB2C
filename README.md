@@ -14,13 +14,16 @@ Think of it as a remote control for your trading account. Instead of logging int
 
 ## What Can You Do With It?
 
-- **Account** — Login, validate your session, check your balance and margins, and logout.
-- **Orders** — Place fresh buy or sell orders, modify pending orders (change price or quantity), and cancel orders you no longer want.
-- **Order Types** — Regular limit (`RL`), market (`RL-MKT`), stop loss limit (`SL`), stop loss market (`SL-MKT`).
-- **Advanced Orders** — Cover orders, bracket orders, and multileg orders.
-- **Reports** — Fetch your full order book (all orders placed today), trade book (all executed trades), and order history (status timeline of a single order).
-- **Portfolio** — View your open positions, convert positions from intraday to delivery (or vice versa), and check your demat holdings.
-- **Live Data** — Subscribe to touchline (LTP) and best-five (market depth) data via WebSocket.
+**Account** — Login, validate your session, check your balance and margins, and logout.
+
+**Orders** — Place fresh buy or sell orders, modify pending orders (change price or quantity), and cancel orders you no longer want.
+
+**Order Types** — Regular limit, stop loss limit.
+
+**Reports** — Fetch your full order book (all orders placed today), trade book (all executed trades), and order history (status timeline of a single order).
+
+**Portfolio** — View your open positions, convert positions from intraday to delivery (or vice versa), and check your demat holdings.
+
 
 
 ---
@@ -31,7 +34,6 @@ Full API reference with all endpoints, request schemas, and response structures:
 
 🔗 [https://b2c-api-docs.northeastltd.in/docs/B2CAPI/nebsl-b2c-api-docs.html](https://b2c-api-docs.northeastltd.in/docs/B2CAPI/nebsl-b2c-api-docs.html)
 
----
 
 
 
@@ -47,15 +49,15 @@ pip install nebsl-b2c-api
 
 ## Credentials You Need
 
-Your broker provides these when they onboard you:
+Your broker provides four things when they onboard you:
 
-| Credential | Description |
-|---|---|
-| **Base URL** | The server address where all API calls go. Looks like a long AWS or cloud URL. |
-| **API Key** | Your application's identity key. Sent in the login request body. |
-| **x-api-key** | Sent as a header (`x-api-key`) on every request for authentication. |
-| **Second AUTH** | A PAN number sent in the login request body to authenticate your app. |
-| **User ID (UCC)** | Your Unique Client Code / broker account number. Example: `NE2247` |
+**Base URL** — The server address where all API calls go. It looks like a long AWS or cloud URL.
+
+**API Key** — Your application's identity key. Sent in the request body during login.
+
+**Second AUTH** — A PAN number sent in every request header to authenticate your app.
+
+**User ID (UCC)** — Your Unique Client Code. This is your broker account number. Example: `NE2247`
 
 > ⚠️ **Never share these credentials or put them in your code directly.** Store them in environment variables or a `.env` file.
 
@@ -69,7 +71,6 @@ from pycloudrestapi import IBTConnect
 client = IBTConnect({
     "baseurl": "<your_base_url>",
     "api_key": "<your_api_key>",
-    "x-api-key": "<your_x_api_key>",
     "second_auth": "<your_pan_number>",
     "debug": True
 })
@@ -134,30 +135,24 @@ You get the token from your broker's scrip master file.
 |---|---|
 | `INTRADAY` | Also called MIS. Must close before market closes (~3:20 PM for NSE equity). Lower margin required. |
 | `DELIVERY` | Also called CNC. Stock goes into your demat account. Hold as long as you want. Full margin required. |
-| `BTST` | Buy Today Sell Tomorrow. |
-| `MTF` | Margin Trading Facility. |
 
 ### `order_type` — How Does It Execute?
 
 | Value | Description |
 |---|---|
 | `RL` | **Regular Limit** — Order sits at your specified price. Executes only when market reaches your price. |
-| `RL-MKT` | **Market Order** — Executes immediately at the best available market price. Set `price` to `0`. |
 | `SL` | **Stop Loss Limit** — Set a trigger price and a limit price. When market hits trigger, order activates at limit price. |
-| `SL-MKT` | **Stop Loss Market** — Like SL but executes at market price once triggered. |
+
 
 ### `validity` — How Long Is the Order Active?
 
 | Value | Description |
 |---|---|
 | `DAY` | Valid only for today. Automatically cancelled if not filled by end of day. |
-| `IOC` | Immediate or Cancel. |
-| `GTD` | Good Till Date. |
-| `GTC` | Good Till Cancelled. |
 
 ### `trigger_price` — When to Use It?
 
-Only needed for `SL` and `SL-MKT` order types. For all other orders, always set `trigger_price` to `0`.
+Only needed for `SL` order types. For all other orders, always set `trigger_price` to `0`.
 
 ### `strike_price` — Important Note for Options
 
@@ -174,29 +169,22 @@ When placing options orders, `strike_price` must be in **paise, not rupees**. Mu
 ```python
 res = client.place_order({
     "scrip_info": {
-        "exchange": "NSE_EQ",
-        "scrip_token": 14366,
-        "symbol": "",
-        "series": "EQ"
+        "exchange":    "NSE_EQ",   # NSE_EQ / BSE_EQ / NSE_FO / BSE_FO / MCX_FO
+        "scrip_token": 14366,      # Token from scrip master (INFY = 10243)
+        "symbol":      "",     # Optional if scrip_token given
+        "series":      "EQ"        # EQ for equity
     },
-    "transaction_type": "BUY",
-    "product_type": "DELIVERY",
-    "order_type": "RL",
-    "quantity": 1,
-    "price": 8.59,
-    "trigger_price": 0,
-    "disclosed_quantity": 0,
-    "validity": "DAY",
-    "validity_days": 0,
-    "is_amo": False,
-    "order_identifier": "",
-    "part_code": "",
-    "algo_id": "",
-    "strategy_id": "",
-    "vender_code": ""
+    "transaction_type":  "BUY",        # BUY or SELL
+    "product_type":      "DELIVERY",   # INTRADAY / DELIVERY / BTST / MTF
+    "order_type":        "RL",         # RL / SL / S
+    "quantity":          1,
+    "price":             8.59,      # Set 0 for market order 
+    "trigger_price":     0,            # Only for SL orders
+    "disclosed_quantity": 0,           # 0 = show full quantity
+    "validity":          "DAY",        # DAY / IOC / GTD / GTC
+  
 })
-
-order_id = res["data"]["orderId"]
+order_id = res["data"]["orderId"]         # To know order ID 
 print("Order ID:", order_id)
 ```
 
@@ -205,20 +193,20 @@ print("Order ID:", order_id)
 ```python
 res = client.place_order({
     "scrip_info": {
-        "exchange": "NSE_FO",
-        "scrip_token": 66688,
-        "symbol": "BANKNIFTY",
-        "expiry_date": "2025-10-31",
-        "strike_price": 0,
-        "option_type": ""
+        "exchange":     "NSE_FO",
+        "scrip_token":  66688,          # Token for the futures contract
+        "symbol":       "BANKNIFTY",
+        "expiry_date":  "2025-10-31",   # Format: yyyy-mm-dd
+        "strike_price": 0,              # 0 for futures
+        "option_type":  ""              # Blank for futures
     },
     "transaction_type": "BUY",
-    "product_type": "INTRADAY",
-    "order_type": "RL",
-    "quantity": 50,
-    "price": 56000.00,
-    "trigger_price": 0,
-    "validity": "DAY"
+    "product_type":     "INTRADAY",
+    "order_type":       "RL",       # Market order
+    "quantity":         50,             # 1 lot NIFTY = 50
+    "price":            56000.00,              # 0 for market
+    "trigger_price":    0,                   # Only for SL orders
+    "validity":         "DAY"
 })
 ```
 
@@ -227,20 +215,20 @@ res = client.place_order({
 ```python
 res = client.place_order({
     "scrip_info": {
-        "exchange": "NSE_FO",
-        "scrip_token": 67528,
-        "symbol": "BANKNIFTY",
-        "expiry_date": "2026-06-30",
-        "strike_price": 5600000,   # In paise: ₹56000 × 100 = 5600000
-        "option_type": "CE"        # CE = Call, PE = Put
+        "exchange":     "NSE_FO",
+        "scrip_token":  67528,
+        "symbol":       "BANKNIFTY",
+        "expiry_date":  "2026-06-30",
+        "strike_price": 5600000,   # In PAISE: ₹25000 × 100 = 2500000
+        "option_type":  "CE"       # CE = Call Option, PE = Put Option
     },
     "transaction_type": "SELL",
-    "product_type": "INTRADAY",
-    "order_type": "RL",
-    "quantity": 30,
-    "price": 120.00,
-    "trigger_price": 0,
-    "validity": "DAY"
+    "product_type":     "INTRADAY",
+    "order_type":       "RL",
+    "quantity":         30,
+    "price":            120.00,
+    "trigger_price":    0,                                # Only for SL orders
+    "validity":         "DAY"
 })
 ```
 
@@ -252,16 +240,16 @@ res = client.place_order({
 
 ```python
 res = client.modify_order({
-    "exchange": "NSE_EQ",
-    "order_id": "NXHCO00006A4",
-    "order_type": "RL",
-    "quantity": 1,
-    "traded_quantity": 0,       # Required — get fresh from order book
-    "price": 9.00,              # New price
-    "trigger_price": 0,
+    "exchange":        "NSE_EQ",        
+    "order_id":        "NXHCO00006A4",  # 
+    "order_type":      "RL",            # 
+    "quantity":   1,   
+    "traded_quantity":    0,  # required from order book
+    "price":              9.00,                   # new price
+    "trigger_price":      0,
     "disclosed_quantity": 0,
-    "validity": "DAY",
-    "validity_days": 0
+    "validity":           "DAY",         # DAY
+    "validity_days":      0     # 0
 })
 ```
 
@@ -271,68 +259,8 @@ res = client.modify_order({
 
 ```python
 res = client.cancel_order({
-    "exchange": "NSE_EQ",
-    "order_id": "NXHCO00006A4"
-})
-```
-
----
-
-## Cover Orders
-
-```python
-# Place cover order
-res = client.place_cover_order({...})
-
-# Modify cover order
-res = client.modify_cover_order({
-    "exchange": "NSE_EQ",
-    "order_id": "NXHCO00006A4",
-    ...
-})
-
-# Cancel cover order
-res = client.cancel_cover_order({
-    "exchange": "NSE_EQ",
-    "order_id": "NXHCO00006A4"
-})
-```
-
----
-
-## Bracket Orders
-
-```python
-# Place bracket order
-res = client.place_bracket_order({...})
-
-# Modify bracket order
-res = client.modify_bracket_order({
-    "exchange": "NSE_EQ",
-    "order_id": "NXHCO00006A4",
-    ...
-})
-
-# Delete bracket order
-res = client.delete_bracket_order({
-    "exchange": "NSE_EQ",
-    "order_id": "NXHCO00006A4"
-})
-```
-
----
-
-## Multileg Orders
-
-```python
-# Place multileg order
-res = client.place_multileg_order({...})
-
-# Cancel multileg order
-res = client.cancel_multileg_order({
-    "order_flag": "<order_flag>",
-    "gateway_order_no": "<gateway_order_no>",
-    ...
+    "exchange": "NSE_EQ",        # Exchange segment
+    "order_id": "NXHCO00006A4"  # Order ID from place_order / order book
 })
 ```
 
@@ -344,46 +272,33 @@ res = client.cancel_multileg_order({
 
 Shows every order you placed today, regardless of status. Supports pagination and filtering.
 
-```python
 res = client.get_order_book({
-    "offset": "1",
-    "limit": "20",
+    "offset":      "1",
+    "limit":       "20",
     "orderStatus": None,
-    "order_id": None
+    "order_id":    None
 })
 
 if res and "data" in res:
     for o in res["data"]:
         print(
-            o["order_id"],
-            o["symbol"],
-            o["exchange"],
-            o["transaction_type"],
-            o["status"],
-            o["order_type"],
-            o["product_type"],
-            o["total_quantity"],
-            o["traded_quantity"],
-            o["pending_quantity"],
-            o["order_price"],
-            o["trigger_price"],
-            o["order_timestamp"],
-            o["exchange_timestamp"],
-            o["error_reason"],
+            o["order_id"],           # e.g. NXHCO00003A4
+            o["symbol"],             # e.g. IDEA
+            o["exchange"],           # e.g. NSE_EQ
+            o["transaction_type"],   # BUY or SELL
+            o["status"],             # EXECUTED / PENDING / CANCELLED
+            o["order_type"],         # RL / SL
+            o["product_type"],       # INTRADAY / DELIVERY
+            o["total_quantity"],     # total qty placed
+            o["traded_quantity"],    # qty filled
+            o["pending_quantity"],   # qty remaining
+            o["order_price"],        # price (string)
+            o["trigger_price"],      # trigger price (string)
+            o["order_timestamp"],    # "2026-04-17 12:46:34"
+            o["exchange_timestamp"], # exchange confirm time
+            o["error_reason"],       # blank if no error
         )
     print("Total orders:", res["metadata"]["total_records"])
-```
-
-### Trade Book
-
-Shows all executed trades for the day.
-
-```python
-res = client.get_trade_book({
-    "offset": "1",
-    "limit": "20"
-})
-```
 
 ### Order History
 
@@ -396,7 +311,7 @@ if res and "data" in res:
     for h in res["data"]:
         print(
             h["order_id"],
-            h["status"],
+            h["status"],             # OMSXMITTED / EXECUTED etc.
             h["order_timestamp"],
             h["exchange_timestamp"],
             h["traded_quantity"],
@@ -412,16 +327,8 @@ if res and "data" in res:
 ### Positions
 
 ```python
-# type: "NET" or "DAY"
-res = client.get_positions({"type": "NET"})
-```
-
-### Position Conversion
-
-Convert positions from intraday to delivery or vice versa.
-
-```python
-res = client.position_conversion({...})
+# type: "DAY"
+res = client.get_positions({"type": "DAY"})
 ```
 
 ### Holdings
@@ -462,7 +369,7 @@ When you place an order, it goes through several stages. Track these using `get_
 | `series` | Series like `EQ` |
 | `transaction_type` | `BUY` or `SELL` |
 | `product_type` | `INTRADAY`, `DELIVERY`, etc. |
-| `order_type` | `RL`, `RL-MKT`, `SL`, `SL-MKT` |
+| `order_type` | `RL`, `SL`|
 | `status` | `EXECUTED`, `PENDING`, etc. |
 | `total_quantity` | Total shares ordered |
 | `traded_quantity` | Shares filled so far |
@@ -470,12 +377,11 @@ When you place an order, it goes through several stages. Track these using `get_
 | `disclosed_quantity` | Shares visible in market |
 | `order_price` | Price as string like `"9.56"` |
 | `trigger_price` | SL trigger price as string like `"0.00"` |
-| `validity` | `DAY`, `IOC`, etc. |
+| `validity` | `DAY`, etc. |
 | `validity_days` | Number of days for GTD orders |
 | `order_timestamp` | When placed, e.g. `"2026-04-17 12:46:34"` |
 | `exchange_timestamp` | When exchange confirmed, e.g. `"2026-04-17 12:46:33"` |
 | `error_reason` | Blank if no error, filled if rejected |
-| `is_amo_order` | `True` if after market order |
 | `exchange_order_no` | Exchange's own order number |
 | `client_id` | Your UCC like `NE1234` |
 | `bracket_details` | Nested object with bracket/cover order details |

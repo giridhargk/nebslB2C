@@ -272,6 +272,7 @@ res = client.cancel_order({
 
 Shows every order you placed today, regardless of status. Supports pagination and filtering.
 
+```python
 res = client.get_order_book({
     "offset":      "1",
     "limit":       "20",
@@ -299,6 +300,7 @@ if res and "data" in res:
             o["error_reason"],       # blank if no error
         )
     print("Total orders:", res["metadata"]["total_records"])
+```
 
 ### Order History
 
@@ -388,103 +390,6 @@ When you place an order, it goes through several stages. Track these using `get_
 
 ---
 
-## WebSocket — Live Market Data
-
-### Broadcast Socket (Touchline & Market Depth)
-
-```python
-import asyncio
-
-async def main():
-    # ... login first ...
-
-    async def on_open_broadcast_socket(message):
-        print("Broadcast socket opened:", message)
-        await client.touchline_subscription([
-            {"MktSegId": "1", "token": "26009"}
-        ])
-
-    async def on_touchline(message):
-        print("Touchline:", message)
-
-    async def on_bestfive(message):
-        print("Best Five:", message)
-
-    async def on_close_broadcast_socket(close_msg):
-        print("Broadcast socket closed:", close_msg)
-
-    async def on_error_broadcast_socket(error):
-        print("Broadcast socket error:", error)
-
-    client.on_open_broadcast_socket = on_open_broadcast_socket
-    client.on_close_broadcast_socket = on_close_broadcast_socket
-    client.on_error_broadcast_socket = on_error_broadcast_socket
-    client.on_touchline = on_touchline
-    client.on_bestfive = on_bestfive
-
-    await client.connect_broadcast_socket()
-
-asyncio.run(main())
-```
-
-### Touchline Subscription / Unsubscription
-
-```python
-# Subscribe
-await client.touchline_subscription([
-    {"MktSegId": "1", "token": "26009"}
-])
-
-# Unsubscribe
-await client.touchline_unsubscription([
-    {"MktSegId": "1", "token": "26009"}
-])
-```
-
-### Best Five (Market Depth) Subscription / Unsubscription
-
-```python
-# Subscribe
-await client.bestfive_subscription({"MktSegId": "1", "token": "22"})
-
-# Unsubscribe
-await client.bestfive_unsubscription({"MktSegId": "1", "token": "22"})
-```
-
-### Message Socket (Order Updates)
-
-```python
-async def on_ready_message_socket(response):
-    print("Message socket ready:", response)
-
-async def on_msg_message_socket(response):
-    print("Order update:", response)
-
-async def on_close_message_socket(close_msg):
-    print("Message socket closed:", close_msg)
-
-async def on_error_message_socket(error):
-    print("Message socket error:", error)
-
-client.on_ready_message_socket = on_ready_message_socket
-client.on_msg_message_socket = on_msg_message_socket
-client.on_close_message_socket = on_close_message_socket
-client.on_error_message_socket = on_error_message_socket
-
-await client.connect_message_socket()
-```
-
-### Running Both Sockets Together
-
-```python
-await asyncio.gather(
-    client.connect_broadcast_socket(),
-    client.connect_message_socket(),
-)
-```
-
----
-
 ## Scrip Master (Token Repository)
 
 Get scrip tokens from the scrip master files:
@@ -513,23 +418,12 @@ Replace the path with `/scripfiles/v2/<EXCHANGE>.json`, e.g.:
 | `client.place_order({...})` | Place a regular order |
 | `client.modify_order({...})` | Modify a pending order |
 | `client.cancel_order({...})` | Cancel a pending order |
-| `client.place_cover_order({...})` | Place a cover order |
-| `client.modify_cover_order({...})` | Modify a cover order |
-| `client.cancel_cover_order({...})` | Cancel a cover order |
 | `client.place_bracket_order({...})` | Place a bracket order |
 | `client.modify_bracket_order({...})` | Modify a bracket order |
 | `client.delete_bracket_order({...})` | Delete a bracket order |
-| `client.place_multileg_order({...})` | Place a multileg order |
-| `client.cancel_multileg_order({...})` | Cancel a multileg order |
 | `client.get_order_book({...})` | Fetch order book |
 | `client.get_trade_book({...})` | Fetch trade book |
 | `client.get_order_history({...})` | Fetch order status timeline |
 | `client.get_positions({...})` | Fetch open positions |
 | `client.position_conversion({...})` | Convert position type |
 | `client.get_holdings()` | Fetch demat holdings |
-| `client.connect_broadcast_socket()` | Connect to live data WebSocket |
-| `client.connect_message_socket()` | Connect to order updates WebSocket |
-| `client.touchline_subscription([...])` | Subscribe to LTP data |
-| `client.touchline_unsubscription([...])` | Unsubscribe from LTP data |
-| `client.bestfive_subscription({...})` | Subscribe to market depth |
-| `client.bestfive_unsubscription({...})` | Unsubscribe from market depth |

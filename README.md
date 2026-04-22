@@ -32,7 +32,7 @@ Think of it as a remote control for your trading account. Instead of logging int
 
 Full API reference with all endpoints, request schemas, and response structures:
 
-🔗 [https://b2c-api-docs.northeastltd.in/docs/B2CAPI/nebsl-b2c-api-docs.html](https://b2c-api-docs.northeastltd.in/docs/B2CAPI/nebsl-b2c-api-docs.html)
+🔗 [https://developer.synapsewave.com/docs/category/b2c-api](https://developer.synapsewave.com/docs/category/b2c-api)
 
 
 

@@ -113,7 +113,7 @@ client.logout()
 
 ### `scrip_token` — What Is It?
 
-Every stock, futures contract, or options contract on an exchange has a unique number called a **scrip token**. The API uses this number to identify what you want to trade. For example, RELIANCE on NSE_EQ has token `2885`, and IDEA has token `14366`.
+Every stock, futures contract, or options contract on an exchange has a unique number called a **scrip token**. The API uses this number to identify what you want to trade. For example, IDEA on NSE_EQ has token `14366`, and IDEA  on BSE_EQ has token `532822`.
 
 You get the token from your broker's scrip master file.
 
@@ -170,7 +170,7 @@ When placing options orders, `strike_price` must be in **paise, not rupees**. Mu
 res = client.place_order({
     "scrip_info": {
         "exchange":    "NSE_EQ",   # NSE_EQ / BSE_EQ / NSE_FO / BSE_FO / MCX_FO
-        "scrip_token": 14366,      # Token from scrip master (INFY = 10243)
+        "scrip_token": 14366,      # BSE token = 532822
         "symbol":      "",     # Optional if scrip_token given
         "series":      "EQ"        # EQ for equity
     },

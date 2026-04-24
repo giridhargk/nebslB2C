@@ -184,8 +184,13 @@ res = client.place_order({
     "validity":          "DAY",        # DAY / IOC / GTD / GTC
   
 })
-order_id = res["data"]["orderId"]         # To know order ID 
-print("Order ID:", order_id)
+#Always check status first
+if res and res["status"] == "success":
+    order_id = res["data"]["orderId"]
+    print("Order placed! Order ID:", order_id)  #To know order_id
+else:
+    print("Order failed!")
+    print("Reason:", res["message"])
 ```
 
 ### Futures Order

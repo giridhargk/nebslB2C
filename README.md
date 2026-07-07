@@ -326,7 +326,108 @@ if res and "data" in res:
             h["order_price"],
         )
 ```
+## Real-Time Order & Trade Updates (Socket)
 
+Instead of repeatedly calling `get_order_book()` to check if your order filled, you can connect to a live socket and get notified **the instant** it happens. This is much faster than polling.
+
+### Why Use It?
+
+The socket is faster because it pushes the update to you immediately, instead of you repeatedly asking "is it done yet?"
+
+### Requirements
+
+```bash
+pip install aiohttp python-socketio websockets --break-system-packages
+```
+
+> ⚠️ Without `aiohttp` installed, the socket will silently fail to connect — no error will stop your script, it just never receives any messages. Always install this first.
+
+### How to Connect
+
+```python
+import asyncio
+
+async def on_ready(status):
+    print("Socket connected and authenticated")
+
+async def on_message(data):
+    print("Received:", data)
+
+client.on_ready_message_socket = on_ready
+client.on_msg_message_socket = on_message
+
+await client.connect_message_socket()
+```
+
+You must be logged in first — the socket uses your access token from `client.login()`.
+
+### Two Types of Messages
+
+Every message has a `message_type` field telling you what it is:
+
+| message_type | Meaning |
+|---|---|
+| `ORD_NRML` | Order status update (placed, pending, rejected, etc.) |
+| `TRD_MSG` | Trade executed — your order (or part of it) just filled |
+
+**For fill detection, `TRD_MSG` is what you want.** Its presence for your `order_id` means a trade just happened — you don't need to separately check status.
+
+### Fields You Get in a `TRD_MSG`
+
+```python
+{
+    'order_id': 'NXHCO00006A4',
+    'exchange': 'NSE_EQ',
+    'scrip_token': 14366,
+    'exchange_order_no': '1100000025651757',
+    'status': 'EXECUTED',
+    'transaction_type': 'BUY',
+    'product_type': 'DELIVERY',
+    'order_type': 'RL',
+    'total_quantity': 1,
+    'pending_quantity': '0',
+    'disclosed_quantity': '0',
+    'order_price': 13.90,
+    'validity_days': 0,
+    'symbol': 'IDEA',
+    'series': 'EQ',
+    'instrument': '',
+    'expiry_date': '',
+    'strike_price': 0,
+    'option_type': '',
+    'initiated_by': 'APIWEB',
+    'modified_by': 'APIWEB',
+    'order_identifier': '--------z1',
+    'message_type': 'TRD_MSG',
+    'is_amo_order': False
+}
+```
+
+### Matching to Your Order
+
+Use `order_id` — it's the **same value** returned by `place_order()`:
+
+```python
+async def on_message(data):
+    if data.get('order_id') == my_order_id and data.get('message_type') == 'TRD_MSG':
+        print("Order filled!", data)
+```
+
+### What's NOT in a `TRD_MSG`
+
+- Exact trade price should still be confirmed via `get_trade_book()` by `trade_price` — the socket's `order_price` field has only order placed_price
+
+### Recommended Pattern
+
+Use the socket to know **when** something happened (fast), then call `get_order_book()` or `get_trade_book()` once to confirm the **exact price and quantity** (accurate):
+
+```python
+async def on_message(data):
+    if data.get('order_id') == my_order_id and data.get('message_type') == 'TRD_MSG':
+        # Fast notification - order just filled
+        confirmed = client.get_order_book({"order_id": my_order_id})
+        print("Confirmed fill:", confirmed)
+```
 ---
 
 ## Portfolio

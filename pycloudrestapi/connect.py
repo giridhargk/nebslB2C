@@ -17,8 +17,8 @@ log = logging.getLogger(__name__)
 class IBTConnect:
     timeout = 10000
     source = "WEBAPI"
-  #  second_auth_type = "TOTP"
-    second_auth="BXXXXXXXXXXXB"
+    #second_auth_type = "TOTP"
+    second_auth =""
     login_type = "PASSWORD"
     logon_response = ""
     is_connected = False
@@ -137,7 +137,7 @@ class IBTConnect:
             "login_type": self.login_type,
             "password": params.get("password"),
             "second_auth": self.second_auth,
-            # "second_auth": params.get("totp"),
+            #"second_auth": params.get("totp"),
             "api_key": self.api_key,
             "source": self.source
         })
@@ -311,13 +311,9 @@ class IBTConnect:
 
     # broadcast socket
     async def connect_broadcast_socket(self):
-        uri = self.logon_response["others"]["broadCastSocket"] if self.logon_response else "wss://web.9star.com:4515",
+        uri = self.logon_response["others"]["broadCastSocket"] if self.logon_response else "wss://odindemo.63moons.com:4510",
         try:
-            import ssl
-            ssl_context = ssl._create_unverified_context()
-            async with websockets.connect(uri[0], ssl=ssl_context) as websocket:
-
-
+            async with websockets.connect(uri[0]) as websocket:
                 self.bcast_socket = websocket
                 self.is_connected = True
                 await self.send_login()
